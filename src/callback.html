@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Callback</title></head>
+<body>
+<h2>Processing login...</h2>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const code = urlParams.get("code");
+
+// You now have the authorization code
+console.log("Authorization code:", code);
+
+// Next: exchange code for tokens using PKCE code_verifier
+// You can do this in client-side JS with `fetch` to:
+// POST https://oauth2.googleapis.com/token
+// Body:
+// {
+//   code: code,
+//   client_id: YOUR_CLIENT_ID,
+//   redirect_uri: redirectUri,
+//   grant_type: "authorization_code",
+//   code_verifier: code_verifier
+// }
+</script>
+</body>
+</html>
