@@ -136,7 +136,6 @@ body {
 </style>
 </head>
 <body>
-  <input type="text" data-bind="dataParam">
 <div class="left-panel">
   <h3>Calendar Menu</h3>
   <div id="dateDisplay">
@@ -252,69 +251,78 @@ let currentDate = new Date();
 const today = new Date();
 let selectedDate = null;
 
-function renderCalendar(query, year, month) {
-    const table = document.querySelector(query);
-    const firstDay = new Date(year, month, 1).getDay();
-    const numDays = new Date(year, month + 1, 0).getDate();
-    const startCol = (firstDay + 6) % 7;
+function renderCalendar(query, workDate) {
+  const year = workDate.getFullYear();
+  const month = workDate.getMonth();
+  const table = document.querySelector(query);
+  const firstDay = new Date(year, month, 1).getDay();
+  const numDays = new Date(year, month + 1, 0).getDate();
+  const startCol = (firstDay + 6) % 7;
 
-    const tbody = table.tBodies[0];
-    let day = 1;
-    const pattern = createPatternByMonth(year, month);
-    for (let l = 0, r = 0; r < 6; r++) {
-        const tr = tbody.rows[r];
-        for (let c = 0; c < 7; c++,l++) {
-            const td = tr.cells[c];
-            td.classList.remove("today");
-            td.classList.remove("off-month");
-            td.classList.remove("in-month");
-            const dateCell = td.querySelector(".date-cell");
-            dateCell.classList.remove("today");
-            dateCell.textContent = pattern[l].day;
-            dateCell.setAttribute("date-date", pattern[l].fullDate);
-            if (pattern[l].month != month) {
-                td.classList.add("off-month");
-            } else {
-                day++;
+  const tbody = table.tBodies[0];
+  let day = 1;
+  const pattern = createPatternByMonth(year, month);
+  for (let l = 0, r = 0; r < 6; r++) {
+      const tr = tbody.rows[r];
+      for (let c = 0; c < 7; c++,l++) {
+          const td = tr.cells[c];
+          td.classList.remove("today");
+          td.classList.remove("off-month");
+          td.classList.remove("in-month");
+          const dateCell = td.querySelector(".date-cell");
+          dateCell.classList.remove("today");
+          dateCell.textContent = pattern[l].day;
+          dateCell.setAttribute("date-date", pattern[l].fullDate);
+          if (pattern[l].month != month) {
+              td.classList.add("off-month");
+          } else {
+              day++;
+              if (pattern[l].isToday) {
+                  dateCell.classList.add("today");
+              } else if(pattern[l].fullDate === currentDate.toISOString().split('T')[0]) {
+                  dateCell.classList.add("selected");
+              } else {
                 td.classList.add("in-month");
-                if (pattern[l].isToday) {
-                    dateCell.classList.add("today");
-                }
-            }
-        }
-    }
+              }
+          }
+      }
+  }
 }
 
-function renderMiniCalendar(query, year, month) {
-    const table = document.querySelector(query);
-    const firstDay = new Date(year, month, 1).getDay();
-    const numDays = new Date(year, month + 1, 0).getDate();
-    const startCol = (firstDay + 6) % 7;
+function renderMiniCalendar(query, workDate) {
+  const year = workDate.getFullYear();
+  const month = workDate.getMonth();
+  const table = document.querySelector(query);
+  const firstDay = new Date(year, month, 1).getDay();
+  const numDays = new Date(year, month + 1, 0).getDate();
+  const startCol = (firstDay + 6) % 7;
 
-    const tbody = table.tBodies[0];
-    let day = 1;
-    const pattern = createPatternByMonth(year, month);
-    for (let l = 0, r = 0; r < 6; r++) {
-        const tr = tbody.rows[r];
-        for (let c = 0; c < 7; c++,l++) {
-            const td = tr.cells[c];
-            td.classList.remove("today");
-            td.classList.remove("off-month");
-            td.classList.remove("in-month");
-            td.textContent = pattern[l].day;
-            td.setAttribute("date-date", pattern[l].fullDate);
-            if (pattern[l].month != month) {
-                td.classList.add("off-month");
-            } else {
-                day++;
-                if (pattern[l].isToday) {
-                    td.classList.add("today");
-                } else {
-                    td.classList.add("in-month");
-                }
-            }
-        }
-    }
+  const tbody = table.tBodies[0];
+  let day = 1;
+  const pattern = createPatternByMonth(year, month);
+  for (let l = 0, r = 0; r < 6; r++) {
+      const tr = tbody.rows[r];
+      for (let c = 0; c < 7; c++,l++) {
+          const td = tr.cells[c];
+          td.classList.remove("today");
+          td.classList.remove("off-month");
+          td.classList.remove("in-month");
+          td.textContent = pattern[l].day;
+          td.setAttribute("date-date", pattern[l].fullDate);
+          if (pattern[l].month != month) {
+              td.classList.add("off-month");
+          } else {
+              day++;
+              if (pattern[l].isToday) {
+                  td.classList.add("today");
+              } else if(pattern[l].fullDate === currentDate.toISOString().split('T')[0]) {
+                  td.classList.add("selected");
+              } else {
+                  td.classList.add("in-month");
+              }
+          }
+      }
+  }
 }
 
 function addSubDate(date, days) {
@@ -335,6 +343,14 @@ function getDayStart(m) {
   }
 }
 
+function toLocalDateString(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+
 function createPatternByMonth(year, month) {
   const LIMIT = 42;
   const arr = new Array(LIMIT);
@@ -346,7 +362,7 @@ function createPatternByMonth(year, month) {
           day: new Date(day_start).getDate(),
           month: new Date(day_start).getMonth(),
           isToday: (today.toDateString() === day_start.toDateString()),
-          fullDate: day_start.toISOString().split('T')[0]
+          fullDate: toLocalDateString(day_start),
 
       }
       day_start = addSubDate(day_start, 1);
@@ -355,8 +371,8 @@ function createPatternByMonth(year, month) {
 }
 
 function updateCalendar() {
-  renderCalendar("#calendar", currentDate.getFullYear(), currentDate.getMonth());
-  renderMiniCalendar("#smallCalendar", currentDate.getFullYear(), currentDate.getMonth());
+  renderCalendar("#calendar", currentDate);
+  renderMiniCalendar("#smallCalendar", currentDate);
   document.querySelector("#currentDate").innerText = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
@@ -390,25 +406,20 @@ updateCalendar();
 function setClickEvent(items) {
   items.forEach(item => {
     item.addEventListener("click", (e) => {
-        const day = parseInt(item.textContent);
-        alert(item.textContent);
-        if (!isNaN(day)) {
-            currentDate.setDate(day);
-            updateCalendar();
-        }
-        item.classList.remove("selected");
+        e.stopPropagation();
+        const item = e.currentTarget;
+        document.querySelectorAll("#calendar tbody tr td div.date-cell, #smallCalendar tbody tr td").forEach(el => {
+            el.classList.remove("selected");
+        });
+        item.getAttribute("date-date");
+        currentDate = new Date(item.getAttribute("date-date"));
+        updateCalendar();
     });
   });
 }
+
 setClickEvent(document.querySelectorAll("#calendar tbody tr td div.date-cell"));
 setClickEvent(document.querySelectorAll("#smallCalendar tbody tr td"));
-</script>
-<script src="assets/bind.js"></script>
-<script>
-      // --- usage ---
-    const state = createReactiveState({
-      dataParam: "",
-    })
 </script>
 </body>
 </html>
